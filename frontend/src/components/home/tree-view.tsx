@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
 import { getRootNodes, addNode } from "@/store/nodeSlice";
-import { TreeNode } from "./tree-node";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import TreeNode from "./tree-node";
 
 export function TreeView() {
   const dispatch = useAppDispatch();
