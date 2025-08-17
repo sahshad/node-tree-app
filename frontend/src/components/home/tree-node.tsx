@@ -27,6 +27,12 @@ export function TreeNode({ node }: Props) {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
+  const [editLoading, setEditLoading] = useState(false);
+  const [addLoading, setAddLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const [loadMoreLoading, setLoadMoreLoading] = useState(false);
+
   const currentPage = pages[node._id] ?? 1;
 
   const toggleChildren = () => {
@@ -41,32 +47,57 @@ export function TreeNode({ node }: Props) {
 
   const handleAddChild = async () => {
     if (childName.trim()) {
-      await dispatch(addNode({ name: childName, parentId: node._id })).unwrap();
+      setAddLoading(true);
+      try {
+        await dispatch(addNode({ name: childName, parentId: node._id })).unwrap();
 
-      if (!expanded) {
-        setExpanded(true);
+        if (!expanded) {
+          setExpanded(true);
+          setPages((prev) => ({ ...prev, [node._id]: 1 }));
+          dispatch(getChildNodes({ parentId: node._id, page: 1, limit: 5 }));
+        }
 
-        setPages((prev) => ({ ...prev, [node._id]: 1 }));
-        dispatch(getChildNodes({ parentId: node._id, page: 1, limit: 5 }));
+        setChildName("");
+        setIsAddOpen(false);
+      } finally {
+        setAddLoading(false);
       }
-
-      setChildName("");
-      setIsAddOpen(false);
     }
   };
 
-  const handleUpdateNode = () => {
+  const handleUpdateNode = async () => {
     if (editName.trim() && editName !== node.name) {
-      dispatch(updateNode({ id: node._id, data: { name: editName } }));
-      setIsEditOpen(false);
+      setEditLoading(true);
+      try {
+        await dispatch(updateNode({ id: node._id, data: { name: editName } })).unwrap();
+        setIsEditOpen(false);
+      } finally {
+        setEditLoading(false);
+      }
     }
   };
 
-  const handleLoadMore = () => {
-    const nextPage = currentPage + 1;
-    dispatch(getChildNodes({ parentId: node._id, page: nextPage, limit: 5 }));
-    setPages((prev) => ({ ...prev, [node._id]: nextPage }));
+  const handleDeleteNode = async () => {
+    setDeleteLoading(true);
+    try {
+      await dispatch(removeNode(node._id));
+      setIsDeleteOpen(false);
+    } finally {
+      setDeleteLoading(false);
+    }
   };
+
+const handleLoadMore = async () => {
+  const nextPage = currentPage + 1;
+  setLoadMoreLoading(true);
+  try {
+    await dispatch(getChildNodes({ parentId: node._id, page: nextPage, limit: 5 }));
+    setPages((prev) => ({ ...prev, [node._id]: nextPage }));
+  } finally {
+    setLoadMoreLoading(false);
+  }
+};
+
 
   return (
     <div className="space-y-2">
@@ -99,8 +130,15 @@ export function TreeNode({ node }: Props) {
                 <div className="space-y-4 mt-4">
                   <Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Node name" />
 
-                  <Button className="w-full" onClick={handleUpdateNode}>
-                    Save
+                  <Button className="w-full" onClick={handleUpdateNode} disabled={editLoading}>
+                    {editLoading ? (
+                      <>
+                        <div className="w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save"
+                    )}
                   </Button>
                 </div>
               </DialogContent>
@@ -134,8 +172,15 @@ export function TreeNode({ node }: Props) {
                 <div className="space-y-4 mt-4">
                   <Input placeholder="Child name" value={childName} onChange={(e) => setChildName(e.target.value)} />
 
-                  <Button className="w-full" onClick={handleAddChild}>
-                    Add
+                  <Button className="w-full" onClick={handleAddChild} disabled={addLoading}>
+                    {addLoading ? (
+                      <>
+                        <div className="w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        Adding...
+                      </>
+                    ) : (
+                      "Add"
+                    )}
                   </Button>
                 </div>
               </DialogContent>
@@ -160,14 +205,15 @@ export function TreeNode({ node }: Props) {
                   <Button variant="ghost" onClick={() => setIsDeleteOpen(false)}>
                     Cancel
                   </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() => {
-                      dispatch(removeNode(node._id));
-                      setIsDeleteOpen(false);
-                    }}
-                  >
-                    Delete
+                  <Button variant="destructive" onClick={handleDeleteNode} disabled={deleteLoading}>
+                    {deleteLoading ? (
+                      <>
+                        <div className="w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      "Delete"
+                    )}
                   </Button>
                 </div>
               </DialogContent>
@@ -183,8 +229,15 @@ export function TreeNode({ node }: Props) {
           ))}
 
           {children.length < totalChildren && (
-            <Button variant="outline" size="sm" onClick={handleLoadMore}>
-              Load More
+            <Button variant="outline" size="sm" onClick={handleLoadMore} disabled={loadMoreLoading}>
+              {loadMoreLoading ? (
+                <>
+                  <div className="w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                "Load More"
+              )}
             </Button>
           )}
         </div>

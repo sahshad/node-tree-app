@@ -11,27 +11,51 @@ export function TreeView() {
 
   const [page, setPage] = useState(1);
   const [newRoot, setNewRoot] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [loadMoreLoading, setLoadMoreLoading] = useState(false);
 
   useEffect(() => {
-    dispatch(getRootNodes({ page, limit: 5 }));
+    const loadData = async () => {
+      setLoadMoreLoading(true);
+      await dispatch(getRootNodes({ page, limit: 5 }));
+      setLoadMoreLoading(false);
+    };
+
+    loadData();
   }, [dispatch, page]);
 
-  const handleAddRoot = () => {
-    if (newRoot.trim()) {
-      dispatch(addNode({ name: newRoot }));
+  const handleAddRoot = async () => {
+    if (!newRoot.trim()) return;
+
+    setLoading(true);
+    try {
+      await dispatch(addNode({ name: newRoot })).unwrap();
       setNewRoot("");
+    } catch (err) {
+      console.error("Failed to add node:", err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleLoadMoreRoots = () => {
+    setPage((prev) => prev + 1);
   };
 
   return (
     <div className="space-y-4">
       <div className="flex gap-2">
-        <Input
-          placeholder="Add root node"
-          value={newRoot}
-          onChange={(e) => setNewRoot(e.target.value)}
-        />
-        <Button onClick={handleAddRoot}>Add Root</Button>
+        <Input placeholder="Add root node" value={newRoot} onChange={(e) => setNewRoot(e.target.value)} />
+        <Button onClick={handleAddRoot} disabled={loading}>
+          {loading ? (
+            <>
+              <div className="w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              Adding...
+            </>
+          ) : (
+            "Add Root"
+          )}
+        </Button>
       </div>
 
       {roots.map((root) => (
@@ -39,13 +63,15 @@ export function TreeView() {
       ))}
 
       {roots.length < totalRoots && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setPage(page + 1)}
-          className="mt-2"
-        >
-          Load More Roots
+        <Button variant="outline" size="sm" onClick={handleLoadMoreRoots} disabled={loadMoreLoading} className="mt-2">
+          {loadMoreLoading ? (
+            <>
+              <div className="w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              Loading...
+            </>
+          ) : (
+            "Load More Roots"
+          )}
         </Button>
       )}
     </div>
