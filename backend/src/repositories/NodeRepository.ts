@@ -6,7 +6,7 @@ export class NodeRepository implements INodeRepository {
     if(nodeData.parentId){
           await Node.findByIdAndUpdate(
       nodeData.parentId,
-      { $inc: { childlCount: 1 } },
+      { $inc: { childCount: 1 } },
       { new: true }
     );
     }
