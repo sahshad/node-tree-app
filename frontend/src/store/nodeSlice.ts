@@ -6,6 +6,7 @@ interface Node {
   _id: string;
   name: string;
   parentId?: string | null;
+  childCount: number;
 }
 
 interface PaginatedResponse {
@@ -104,6 +105,19 @@ const nodeSlice = createSlice({
               nodes: [action.payload],
               total: 1,
             };
+          }
+
+          const rootParent = state.roots.find((n) => n._id === parentId);
+          if (rootParent) {
+            rootParent.childCount += 1;
+          } else {
+            for (const key in state.children) {
+              const parent = state.children[key].nodes.find((n) => n._id === parentId);
+              if (parent) {
+                parent.childCount += 1;
+                break;
+              }
+            }
           }
         } else {
           state.roots = [action.payload, ...state.roots];
