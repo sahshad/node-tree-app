@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API = axios.create({ baseURL: "http://localhost:3000/api/node/" });
+const API = axios.create({ baseURL: import.meta.env.VITE_API_URL });
 
 export const fetchRootNodes = (page = 1, limit = 5) =>
   API.get(`/roots?page=${page}&limit=${limit}`);
