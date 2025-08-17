@@ -25,6 +25,7 @@ export function TreeNode({ node }: Props) {
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   const currentPage = pages[node._id] ?? 1;
 
@@ -70,79 +71,108 @@ export function TreeNode({ node }: Props) {
   return (
     <div className="space-y-2">
       <Card className="w-full p-2">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={toggleChildren}>
-            {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-          </Button>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Button variant="ghost" size="sm" onClick={toggleChildren}>
+              {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            </Button>
 
-          <span className="flex-1 font-medium">{node.name}</span>
+            <span className="flex-1 font-medium">{node.name}</span>
+          </div>
 
-          <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Pencil size={16} className="mr-1" />
-                Edit
-              </Button>
-            </DialogTrigger>
-
-            <DialogContent className="sm:max-w-sm">
-              <DialogHeader>
-                <DialogTitle>Edit Node</DialogTitle>
-                <p className="text-sm text-muted-foreground">
-                  Change the name of this node and click save to update it.
-                </p>
-              </DialogHeader>
-
-              <div className="space-y-4 mt-4">
-                <Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Node name" />
-
-                <Button className="w-full" onClick={handleUpdateNode}>
-                  Save
+          <div className="flex flex-wrap gap-2 ml-auto">
+            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+              <DialogTrigger asChild>
+                <Button variant="link" size="icon">
+                  <Pencil size={16} className="" />
                 </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
 
-          <Dialog
-            open={isAddOpen}
-            onOpenChange={(open) => {
-              setIsAddOpen(open);
+              <DialogContent className="sm:max-w-sm">
+                <DialogHeader>
+                  <DialogTitle>Edit Node</DialogTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Change the name of this node and click save to update it.
+                  </p>
+                </DialogHeader>
 
-              if (open) {
-                const defaultIndex = (node.childCount || 0) + 1;
-                setChildName(`${node.name}.${defaultIndex}`);
-              }
-            }}
-          >
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Plus size={16} className="mr-1" />
-                Child
-              </Button>
-            </DialogTrigger>
+                <div className="space-y-4 mt-4">
+                  <Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Node name" />
 
-            <DialogContent className="sm:max-w-sm">
-              <DialogHeader>
-                <DialogTitle>Add Child Node</DialogTitle>
-                <p className="text-sm text-muted-foreground">
-                  Enter a name for the new child node. It will be added under <strong>{node.name}</strong>.
-                </p>
-              </DialogHeader>
+                  <Button className="w-full" onClick={handleUpdateNode}>
+                    Save
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
 
-              <div className="space-y-4 mt-4">
-                <Input placeholder="Child name" value={childName} onChange={(e) => setChildName(e.target.value)} />
+            <Dialog
+              open={isAddOpen}
+              onOpenChange={(open) => {
+                setIsAddOpen(open);
 
-                <Button className="w-full" onClick={handleAddChild}>
-                  Add
+                if (open) {
+                  const defaultIndex = (node.childCount || 0) + 1;
+                  setChildName(`${node.name}.${defaultIndex}`);
+                }
+              }}
+            >
+              <DialogTrigger asChild>
+                <Button variant="link" size="icon">
+                  <Plus size={16} className="" />
                 </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
 
-          <Button variant="destructive" size="sm" onClick={() => dispatch(removeNode(node._id))}>
-            <Trash2 size={16} className="mr-1" />
-            Delete
-          </Button>
+              <DialogContent className="sm:max-w-sm">
+                <DialogHeader>
+                  <DialogTitle>Add Child Node</DialogTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Enter a name for the new child node. It will be added under <strong>{node.name}</strong>.
+                  </p>
+                </DialogHeader>
+
+                <div className="space-y-4 mt-4">
+                  <Input placeholder="Child name" value={childName} onChange={(e) => setChildName(e.target.value)} />
+
+                  <Button className="w-full" onClick={handleAddChild}>
+                    Add
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+              <DialogTrigger asChild>
+                <Button variant="link" size="icon">
+                  <Trash2 size={16} className="text-red-500" />
+                </Button>
+              </DialogTrigger>
+
+              <DialogContent className="sm:max-w-sm">
+                <DialogHeader>
+                  <DialogTitle>Confirm Deletion</DialogTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Are you sure you want to delete <strong>{node.name}</strong>? This action cannot be undone.
+                  </p>
+                </DialogHeader>
+
+                <div className="flex justify-end gap-2 mt-4">
+                  <Button variant="ghost" onClick={() => setIsDeleteOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      dispatch(removeNode(node._id));
+                      setIsDeleteOpen(false);
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       </Card>
 
