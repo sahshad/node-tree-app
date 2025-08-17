@@ -32,17 +32,23 @@ export function TreeNode({ node }: Props) {
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const [loadMoreLoading, setLoadMoreLoading] = useState(false);
+  const [loadingChildren, setLoadingChildren] = useState(false);
 
   const currentPage = pages[node._id] ?? 1;
 
-  const toggleChildren = () => {
+  const toggleChildren = async () => {
     if (!expanded) {
       if (!childrenData) {
-        dispatch(getChildNodes({ parentId: node._id, page: 1, limit: 5 }));
-        setPages((prev) => ({ ...prev, [node._id]: 1 }));
+        setLoadingChildren(true);
+        try {
+          await dispatch(getChildNodes({ parentId: node._id, page: 1, limit: 5 }));
+          setPages((prev) => ({ ...prev, [node._id]: 1 }));
+        } finally {
+          setLoadingChildren(false);
+        }
       }
     }
-    setExpanded(!expanded);
+    setExpanded((prev) => !prev);
   };
 
   const handleAddChild = async () => {
@@ -87,25 +93,30 @@ export function TreeNode({ node }: Props) {
     }
   };
 
-const handleLoadMore = async () => {
-  const nextPage = currentPage + 1;
-  setLoadMoreLoading(true);
-  try {
-    await dispatch(getChildNodes({ parentId: node._id, page: nextPage, limit: 5 }));
-    setPages((prev) => ({ ...prev, [node._id]: nextPage }));
-  } finally {
-    setLoadMoreLoading(false);
-  }
-};
-
+  const handleLoadMore = async () => {
+    const nextPage = currentPage + 1;
+    setLoadMoreLoading(true);
+    try {
+      await dispatch(getChildNodes({ parentId: node._id, page: nextPage, limit: 5 }));
+      setPages((prev) => ({ ...prev, [node._id]: nextPage }));
+    } finally {
+      setLoadMoreLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-2">
       <Card className="w-full p-2">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
           <div className="flex items-center gap-2 flex-shrink-0">
-            <Button variant="ghost" size="sm" onClick={toggleChildren}>
-              {expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+            <Button variant="link" size="sm" onClick={toggleChildren}>
+              {loadingChildren ? (
+                <div className="w-3 h-3 animate-spin border-2 border-muted-foreground border-t-transparent rounded-full" />
+              ) : expanded ? (
+                <ChevronDown size={16} />
+              ) : (
+                <ChevronRight size={16} />
+              )}
             </Button>
 
             <span className="flex-1 font-medium">{node.name}</span>
