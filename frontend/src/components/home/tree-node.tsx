@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ChevronRight, ChevronDown, Pencil, Plus, Trash2 } from "lucide-react";
 
 interface Props {
-  node: { _id: string; name: string; parentId?: string | null };
+  node: { _id: string; name: string; childCount: number; parentId?: string | null };
 }
 
 export function TreeNode({ node }: Props) {
@@ -103,7 +103,17 @@ export function TreeNode({ node }: Props) {
             </DialogContent>
           </Dialog>
 
-          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+          <Dialog
+            open={isAddOpen}
+            onOpenChange={(open) => {
+              setIsAddOpen(open);
+
+              if (open) {
+                const defaultIndex = (node.childCount || 0) + 1;
+                setChildName(`${node.name}.${defaultIndex}`);
+              }
+            }}
+          >
             <DialogTrigger asChild>
               <Button variant="outline" size="sm">
                 <Plus size={16} className="mr-1" />
