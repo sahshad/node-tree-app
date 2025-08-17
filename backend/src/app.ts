@@ -6,7 +6,7 @@ import nodeRouter from "./routes/nodeRoutes";
 
 const app = express();
 
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+app.use(cors({ origin: env.CLIENT_URL, credentials: true }));
 app.use(express.json());
 
 app.use("/api/node/", nodeRouter);
